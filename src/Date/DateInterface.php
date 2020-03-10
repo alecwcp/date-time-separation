@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace alecwcp;
+namespace alecwcp\Date;
 
 interface DateInterface
 {
