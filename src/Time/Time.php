@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace alecwcp\Time;
 
+use alecwcp\Exception\Exception;
 use alecwcp\Exception\InvalidArgumentException;
 
 /**
@@ -27,13 +28,18 @@ class Time implements TimeInterface
      * @param string $format
      * @param string $date
      * @return Time
+     * @throws Exception
      */
     public static function createFromFormat(string $format, string $date): Time
     {
         $utc = new \DateTimeZone('UTC');
-        $dateTime = \DateTimeImmutable::createFromFormat($format, $date, $utc)->setDate(0, 0, 0);
+        $dateTime = \DateTimeImmutable::createFromFormat($format, $date, $utc);
+        if (false === $dateTime) {
+            throw new Exception(sprintf('Failed to create %s from format %s.', \DateTimeImmutable::class, $format));
+        }
+        $dateTime = $dateTime->setDate(0, 0, 0);
         $matches = [];
-        preg_match('/(\d{2}):(\d{2}):(\d{2}).(\d{6})/', $dateTime->format(static::FORMAT), $matches);
+        preg_match('/(\d{2}):(\d{2}):(\d{2}).(\d{6})/', $dateTime->format(self::FORMAT), $matches);
         $time = new static();
         $time->hour = (int) $matches[1];
         $time->minute = (int) $matches[2];
@@ -43,8 +49,10 @@ class Time implements TimeInterface
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @param \DateTimeInterface|TimeInterface $time
      * @return Time
+     * @throws InvalidArgumentException|Exception
      */
     public function createFromInterface(object $time): Time
     {
@@ -59,11 +67,13 @@ class Time implements TimeInterface
             );
         }
 
-        return static::createFromFormat(static::FORMAT, $time->format(static::FORMAT));
+        return static::createFromFormat(self::FORMAT, $time->format(self::FORMAT));
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @inheritDoc
+     * @throws InvalidArgumentException|Exception
      */
     public function diff(object $time2, bool $absolute = false): \DateInterval
     {
@@ -80,34 +90,55 @@ class Time implements TimeInterface
 
         $utc = new \DateTimeZone('UTC');
         $dateTime1 = \DateTimeImmutable::createFromFormat(
-            static::FORMAT,
-            $this->format(static::FORMAT),
+            self::FORMAT,
+            $this->format(self::FORMAT),
             $utc
-        )->setDate(0, 0, 0);
+        );
+        if (false === $dateTime1) {
+            throw new Exception(
+                sprintf('Failed to create %s from format %s.', \DateTimeImmutable::class, self::FORMAT)
+            );
+        }
+        $dateTime1 = $dateTime1->setDate(0, 0, 0);
         $dateTime2 = \DateTimeImmutable::createFromFormat(
-            static::FORMAT,
-            $time2->format(static::FORMAT),
+            self::FORMAT,
+            $time2->format(self::FORMAT),
             $utc
-        )->setDate(0, 0, 0);
+        );
+        if (false === $dateTime2) {
+            throw new Exception(
+                sprintf('Failed to create %s from format %s.', \DateTimeImmutable::class, self::FORMAT)
+            );
+        }
+        $dateTime2 = $dateTime2->setDate(0, 0, 0);
         return $dateTime1->diff($dateTime2, $absolute);
     }
 
     /**
      * @inheritDoc
+     * @throws Exception
      */
     public function format(string $format): string
     {
         $utc = new \DateTimeZone('UTC');
         $dateTime = \DateTimeImmutable::createFromFormat(
-            static::FORMAT,
+            self::FORMAT,
             sprintf('%d:%d:%d.%d', $this->hour, $this->minute, $this->second, $this->microSecond),
             $utc
-        )->setDate(0, 0, 0);
+        );
+        if (false === $dateTime) {
+            throw new Exception(
+                sprintf('Failed to create %s from format %s.', \DateTimeImmutable::class, self::FORMAT)
+            );
+        }
+        $dateTime = $dateTime->setDate(0, 0, 0);
         return $dateTime->format($format);
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @inheritDoc
+     * @throws InvalidArgumentException|Exception
      */
     public function equalTo(object $time2): bool
     {
@@ -132,7 +163,9 @@ class Time implements TimeInterface
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @inheritDoc
+     * @throws InvalidArgumentException|Exception
      */
     public function lessThan(object $time2): bool
     {
@@ -163,7 +196,9 @@ class Time implements TimeInterface
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @inheritDoc
+     * @throws InvalidArgumentException|Exception
      */
     public function lessThanOrEqualTo(object $time2): bool
     {
@@ -182,7 +217,9 @@ class Time implements TimeInterface
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @inheritDoc
+     * @throws InvalidArgumentException|Exception
      */
     public function greaterThan(object $time2): bool
     {
@@ -201,7 +238,9 @@ class Time implements TimeInterface
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @inheritDoc
+     * @throws InvalidArgumentException|Exception
      */
     public function greaterThanOrEqualTo(object $time2): bool
     {

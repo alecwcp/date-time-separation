@@ -26,5 +26,10 @@ classes all references are to `static` rather than `self` to allow easily overri
 
 This library adheres to the PSR2 coding standard. Run the style check by running
 ```
-vendor/bin/phpcs --standard="tests/phpcs.xml" src tests
+./vendor/bin/phpcs --standard="phpcs.xml" src
+```
+
+This library uses [Psalm](https://psalm.dev/docs/) for static analysis. Run the analyzer by running
+```
+./vendor/bin/psalm
 ```

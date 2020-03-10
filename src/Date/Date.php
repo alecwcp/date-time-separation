@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace alecwcp\Date;
 
+use alecwcp\Exception\Exception;
 use alecwcp\Exception\InvalidArgumentException;
 
 /**
@@ -12,6 +13,7 @@ use alecwcp\Exception\InvalidArgumentException;
  */
 class Date implements DateInterface
 {
+    /** @var string */
     public const FORMAT = 'Y-m-d';
 
     /** @var int $year */
@@ -25,13 +27,18 @@ class Date implements DateInterface
      * @param string $format
      * @param string $date
      * @return Date
+     * @throws Exception
      */
     public static function createFromFormat(string $format, string $date): Date
     {
         $utc = new \DateTimeZone('UTC');
-        $dateTime = \DateTimeImmutable::createFromFormat($format, $date, $utc)->setTime(0, 0);
+        $dateTime = \DateTimeImmutable::createFromFormat($format, $date, $utc);
+        if (false === $dateTime) {
+            throw new Exception(sprintf('Failed to create %s from format %s.', \DateTimeImmutable::class, $format));
+        }
+        $dateTime = $dateTime->setTime(0, 0);
         $matches = [];
-        preg_match('/(\d{4})-(\d{2})-(\d{2})/', $dateTime->format(static::FORMAT), $matches);
+        preg_match('/(\d{4})-(\d{2})-(\d{2})/', $dateTime->format(self::FORMAT), $matches);
         $date = new static();
         $date->year = (int) $matches[1];
         $date->month = (int) $matches[2];
@@ -40,8 +47,10 @@ class Date implements DateInterface
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @param \DateTimeInterface|DateInterface $date
      * @return Date
+     * @throws InvalidArgumentException|Exception
      */
     public function createFromInterface(object $date): Date
     {
@@ -56,11 +65,13 @@ class Date implements DateInterface
             );
         }
 
-        return static::createFromFormat(static::FORMAT, $date->format(static::FORMAT));
+        return static::createFromFormat(self::FORMAT, $date->format(self::FORMAT));
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @inheritDoc
+     * @throws InvalidArgumentException|Exception
      */
     public function diff(object $date2, bool $absolute = false): \DateInterval
     {
@@ -77,34 +88,55 @@ class Date implements DateInterface
 
         $utc = new \DateTimeZone('UTC');
         $dateTime1 = \DateTimeImmutable::createFromFormat(
-            static::FORMAT,
-            $this->format(static::FORMAT),
+            self::FORMAT,
+            $this->format(self::FORMAT),
             $utc
-        )->setTime(0, 0);
+        );
+        if (false === $dateTime1) {
+            throw new Exception(
+                sprintf('Failed to create %s from format %s.', \DateTimeImmutable::class, self::FORMAT)
+            );
+        }
+        $dateTime1 = $dateTime1->setTime(0, 0);
         $dateTime2 = \DateTimeImmutable::createFromFormat(
-            static::FORMAT,
-            $date2->format(static::FORMAT),
+            self::FORMAT,
+            $date2->format(self::FORMAT),
             $utc
-        )->setTime(0, 0);
+        );
+        if (false === $dateTime2) {
+            throw new Exception(
+                sprintf('Failed to create %s from format %s.', \DateTimeImmutable::class, self::FORMAT)
+            );
+        }
+        $dateTime2 = $dateTime2->setTime(0, 0);
         return $dateTime1->diff($dateTime2, $absolute);
     }
 
     /**
      * @inheritDoc
+     * @throws Exception
      */
     public function format(string $format): string
     {
         $utc = new \DateTimeZone('UTC');
         $dateTime = \DateTimeImmutable::createFromFormat(
-            static::FORMAT,
+            self::FORMAT,
             sprintf('%d-%d-%d', $this->year, $this->month, $this->day),
             $utc
-        )->setTime(0, 0);
+        );
+        if (false === $dateTime) {
+            throw new Exception(
+                sprintf('Failed to create %s from format %s.', \DateTimeImmutable::class, self::FORMAT)
+            );
+        }
+        $dateTime = $dateTime->setTime(0, 0);
         return $dateTime->format($format);
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @inheritDoc
+     * @throws InvalidArgumentException|Exception
      */
     public function equalTo(object $date2): bool
     {
@@ -128,7 +160,9 @@ class Date implements DateInterface
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @inheritDoc
+     * @throws InvalidArgumentException|Exception
      */
     public function lessThan(object $date2): bool
     {
@@ -156,7 +190,9 @@ class Date implements DateInterface
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @inheritDoc
+     * @throws InvalidArgumentException|Exception
      */
     public function lessThanOrEqualTo(object $date2): bool
     {
@@ -175,7 +211,9 @@ class Date implements DateInterface
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @inheritDoc
+     * @throws InvalidArgumentException|Exception
      */
     public function greaterThan(object $date2): bool
     {
@@ -194,7 +232,9 @@ class Date implements DateInterface
     }
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
      * @inheritDoc
+     * @throws InvalidArgumentException|Exception
      */
     public function greaterThanOrEqualTo(object $date2): bool
     {
