@@ -4,13 +4,52 @@ declare(strict_types=1);
 
 namespace alecwcp\Time;
 
+/**
+ * Interface TimeInterface
+ * @package alecwcp\Time
+ */
 interface TimeInterface
 {
-    public function diff(TimeInterface $time2, bool $absolute = false): \DateInterval;
+    /**
+     * @param \DateTimeInterface|TimeInterface $time2
+     * @param bool $absolute
+     * @return \DateInterval
+     */
+    public function diff(object $time2, bool $absolute = false): \DateInterval;
+
+    /**
+     * @param string $format
+     * @return string
+     */
     public function format(string $format): string;
-    public function equalTo(TimeInterface $time2): bool;
-    public function lessThan(TimeInterface $time2): bool;
-    public function lessThanOrEqualTo(TimeInterface $time2): bool;
-    public function greaterThan(TimeInterface $time2): bool;
-    public function greaterThanOrEqualTo(TimeInterface $time2): bool;
+
+    /**
+     * @param \DateTimeInterface|TimeInterface $time2
+     * @return bool
+     */
+    public function equalTo(object $time2): bool;
+
+    /**
+     * @param \DateTimeInterface|TimeInterface $time2
+     * @return bool
+     */
+    public function lessThan(object $time2): bool;
+
+    /**
+     * @param \DateTimeInterface|TimeInterface $time2
+     * @return bool
+     */
+    public function lessThanOrEqualTo(object $time2): bool;
+
+    /**
+     * @param \DateTimeInterface|TimeInterface $time2
+     * @return bool
+     */
+    public function greaterThan(object $time2): bool;
+
+    /**
+     * @param \DateTimeInterface|TimeInterface $time2
+     * @return bool
+     */
+    public function greaterThanOrEqualTo(object $time2): bool;
 }
