@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace alecwcp;
 
@@ -36,15 +38,27 @@ class Date implements DateInterface
     public function diff(DateInterface $date2, bool $absolute = false): \DateInterval
     {
         $utc = new \DateTimeZone('UTC');
-        $dateTime1 = \DateTimeImmutable::createFromFormat(static::FORMAT, $this->format(static::FORMAT), $utc)->setTime(0, 0);
-        $dateTime2 = \DateTimeImmutable::createFromFormat(static::FORMAT, $this->format(static::FORMAT), $utc)->setTime(0, 0);
+        $dateTime1 = \DateTimeImmutable::createFromFormat(
+            static::FORMAT,
+            $this->format(static::FORMAT),
+            $utc
+        )->setTime(0, 0);
+        $dateTime2 = \DateTimeImmutable::createFromFormat(
+            static::FORMAT,
+            $this->format(static::FORMAT),
+            $utc
+        )->setTime(0, 0);
         return $dateTime1->diff($dateTime2, $absolute);
     }
 
     public function format(string $format): string
     {
         $utc = new \DateTimeZone('UTC');
-        $dateTime = \DateTimeImmutable::createFromFormat(static::FORMAT, sprintf('%d-%d-%d', $this->year, $this->month, $this->day), $utc)->setTime(0, 0);
+        $dateTime = \DateTimeImmutable::createFromFormat(
+            static::FORMAT,
+            sprintf('%d-%d-%d', $this->year, $this->month, $this->day),
+            $utc
+        )->setTime(0, 0);
         return $dateTime->format($format);
     }
 

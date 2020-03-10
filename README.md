@@ -21,3 +21,10 @@ The internals of the library lean heavily on `DateTimeImmutable` to handle forma
 
 Extenders can either implement the interfaces provided here, or extend the simple classes provided here (within the
 classes all references are to `static` rather than `self` to allow easily overriding their behaviour).
+
+#### Contributing
+
+This library adheres to the PSR2 coding standard. Run the style check by running
+```
+vendor/bin/phpcs --standard="tests/phpcs.xml" src tests
+```

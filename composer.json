@@ -16,6 +16,12 @@
     "autoload": {
         "psr-4": {
             "alecwcp\\": "src/"
-        }
+        },
+        "exclude-from-classmap": [
+            "/tests/"
+        ]
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3"
     }
 }

@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace alecwcp;
 
@@ -38,15 +40,27 @@ class Time implements TimeInterface
     public function diff(TimeInterface $time2, bool $absolute = false): \DateInterval
     {
         $utc = new \DateTimeZone('UTC');
-        $dateTime1 = \DateTimeImmutable::createFromFormat(static::FORMAT, $this->format(static::FORMAT), $utc)->setDate(0, 0, 0);
-        $dateTime2 = \DateTimeImmutable::createFromFormat(static::FORMAT, $this->format(static::FORMAT), $utc)->setDate(0, 0, 0);
+        $dateTime1 = \DateTimeImmutable::createFromFormat(
+            static::FORMAT,
+            $this->format(static::FORMAT),
+            $utc
+        )->setDate(0, 0, 0);
+        $dateTime2 = \DateTimeImmutable::createFromFormat(
+            static::FORMAT,
+            $this->format(static::FORMAT),
+            $utc
+        )->setDate(0, 0, 0);
         return $dateTime1->diff($dateTime2, $absolute);
     }
 
     public function format(string $format): string
     {
         $utc = new \DateTimeZone('UTC');
-        $dateTime = \DateTimeImmutable::createFromFormat(static::FORMAT, sprintf('%d:%d:%d.%d', $this->hour, $this->minute, $this->second, $this->microSecond), $utc)->setDate(0, 0, 0);
+        $dateTime = \DateTimeImmutable::createFromFormat(
+            static::FORMAT,
+            sprintf('%d:%d:%d.%d', $this->hour, $this->minute, $this->second, $this->microSecond),
+            $utc
+        )->setDate(0, 0, 0);
         return $dateTime->format($format);
     }
 
