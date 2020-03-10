@@ -1,0 +1,19 @@
+{
+    "name": "alecwcp/date-time-separation",
+    "description": "A library for handling dates and times as distinct, separate objects.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alec Wilson",
+            "email": "alec@care-planner.co.uk"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "alecwcp": "src/"
+        }
+    }
+}
