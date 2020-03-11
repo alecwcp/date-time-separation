@@ -265,7 +265,7 @@ class Date implements DateInterface
      */
     public function getMonth(): int
     {
-        return $this->year;
+        return $this->month;
     }
 
     /**
@@ -273,6 +273,6 @@ class Date implements DateInterface
      */
     public function getDay(): int
     {
-        return $this->year;
+        return $this->day;
     }
 }
