@@ -33,3 +33,8 @@ This library uses [Psalm](https://psalm.dev/docs/) for static analysis. Run the 
 ```
 ./vendor/bin/psalm
 ```
+
+This library uses [PHPUnit](https://phpunit.readthedocs.io/en/8.0/) for testing. Run the tests by running
+```
+./vendor/bin/phpunit tests
+```
