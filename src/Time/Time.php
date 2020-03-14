@@ -54,19 +54,9 @@ class Time implements TimeInterface
      * @return Time
      * @throws InvalidArgumentException|Exception
      */
-    public function createFromInterface(object $time): Time
+    public static function createFromInterface(object $time): Time
     {
-        if (!$time instanceof TimeInterface && !$time instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    TimeInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
-
+        self::checkInterfaceType(__METHOD__, $time);
         return static::createFromFormat(self::FORMAT, $time->format(self::FORMAT));
     }
 
@@ -77,16 +67,7 @@ class Time implements TimeInterface
      */
     public function diff(object $time2, bool $absolute = false): \DateInterval
     {
-        if (!$time2 instanceof TimeInterface && !$time2 instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    TimeInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
+        self::checkInterfaceType(__METHOD__, $time2);
 
         $utc = new \DateTimeZone('UTC');
         $dateTime1 = \DateTimeImmutable::createFromFormat(
@@ -140,26 +121,23 @@ class Time implements TimeInterface
      * @inheritDoc
      * @throws InvalidArgumentException|Exception
      */
-    public function equalTo(object $time2): bool
+    public static function equalTo(object $time1, object ...$times): bool
     {
-        if (!$time2 instanceof TimeInterface && !$time2 instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    TimeInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
+        array_unshift($times, $time1);
+        $times = self::transformInterfacesToTimes($times);
+        $time1 = array_shift($times);
 
-        if (!$time2 instanceof Time) {
-            $time2 = static::createFromInterface($time2);
+        foreach ($times as $key => $time) {
+            $equalTo = $time->hour === $time1->hour
+                && $time->minute === $time1->minute
+                && $time->second === $time1->second
+                && $time->microSecond === $time1->microSecond;
+            if (!$equalTo) {
+                return false;
+            }
+            $time1 = $time;
         }
-        return $time2->hour === $this->hour
-            && $time2->minute === $this->minute
-            && $time2->second === $this->second
-            && $time2->microSecond === $this->microSecond;
+        return true;
     }
 
     /**
@@ -167,32 +145,24 @@ class Time implements TimeInterface
      * @inheritDoc
      * @throws InvalidArgumentException|Exception
      */
-    public function lessThan(object $time2): bool
+    public static function lessThan(object $time1, object ...$times): bool
     {
-        if (!$time2 instanceof TimeInterface && !$time2 instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    TimeInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
+        array_unshift($times, $time1);
+        $times = self::transformInterfacesToTimes($times);
+        $time1 = array_shift($times);
 
-        if (!$time2 instanceof Time) {
-            $time2 = static::createFromInterface($time2);
+        foreach ($times as $key => $time) {
+            if ($time1->hour >= $time->hour) {
+                return false;
+            } elseif ($time1->minute >= $time->minute) {
+                return false;
+            } elseif ($time1->second >= $time->second) {
+                return false;
+            } elseif ($time1->micoSecond >= $time->micoSecond) {
+                return false;
+            }
         }
-        if ($this->hour < $time2->hour) {
-            return true;
-        }
-        if ($this->minute < $time2->minute) {
-            return true;
-        }
-        if ($this->second < $time2->second) {
-            return true;
-        }
-        return $this->microSecond < $time2->microSecond;
+        return true;
     }
 
     /**
@@ -200,20 +170,10 @@ class Time implements TimeInterface
      * @inheritDoc
      * @throws InvalidArgumentException|Exception
      */
-    public function lessThanOrEqualTo(object $time2): bool
+    public static function lessThanOrEqualTo(object $time1, object ...$times): bool
     {
-        if (!$time2 instanceof TimeInterface && !$time2 instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    TimeInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
-
-        return $this->lessThan($time2) || $this->equalTo($time2);
+        array_unshift($times, $time1);
+        return self::lessThan(...$times) || self::equalTo(...$times);
     }
 
     /**
@@ -221,20 +181,10 @@ class Time implements TimeInterface
      * @inheritDoc
      * @throws InvalidArgumentException|Exception
      */
-    public function greaterThan(object $time2): bool
+    public function greaterThan(object $time1, object ...$times): bool
     {
-        if (!$time2 instanceof TimeInterface && !$time2 instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    TimeInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
-
-        return !$this->lessThanOrEqualTo($time2);
+        array_unshift($times, $time1);
+        return !self::lessThanOrEqualTo(...$times);
     }
 
     /**
@@ -242,20 +192,41 @@ class Time implements TimeInterface
      * @inheritDoc
      * @throws InvalidArgumentException|Exception
      */
-    public function greaterThanOrEqualTo(object $time2): bool
+    public function greaterThanOrEqualTo(object $time1, object ...$times): bool
     {
-        if (!$time2 instanceof TimeInterface && !$time2 instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    TimeInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
+        array_unshift($times, $time1);
+        return !self::lessThan(...$times);
+    }
 
-        return !$this->lessThan($time2);
+    private static function checkInterfaceType(string $method, object ...$times): void
+    {
+        foreach ($times as $time) {
+            if (!$time instanceof TimeInterface && !$time instanceof \DateTimeInterface) {
+                throw new InvalidArgumentException(
+                    sprintf(
+                        'Expected %s or %s to be passed to %s. Got %s..',
+                        TimeInterface::class,
+                        \DateTimeInterface::class,
+                        $method,
+                        'object' === gettype($time) ? get_class($time) : gettype($time)
+                    )
+                );
+            }
+        }
+    }
+
+    private static function transformInterfacesToTimes(...$times): array
+    {
+        return array_map(
+            function (object $time): Time {
+                self::checkInterfaceType();
+                if (!$time instanceof Time) {
+                    $time = static::createFromInterface($time);
+                }
+                return $time;
+            },
+            $times
+        );
     }
 
     /**

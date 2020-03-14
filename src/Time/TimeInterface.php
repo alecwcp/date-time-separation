@@ -24,32 +24,32 @@ interface TimeInterface
     public function format(string $format): string;
 
     /**
-     * @param \DateTimeInterface|TimeInterface $time2
+     * @param \DateTimeInterface[]|TimeInterface[] $times
      * @return bool
      */
-    public function equalTo(object $time2): bool;
+    public static function equalTo(object ...$times): bool;
 
     /**
-     * @param \DateTimeInterface|TimeInterface $time2
+     * @param \DateTimeInterface[]|TimeInterface[] $times
      * @return bool
      */
-    public function lessThan(object $time2): bool;
+    public static function lessThan(object ...$times): bool;
 
     /**
-     * @param \DateTimeInterface|TimeInterface $time2
+     * @param \DateTimeInterface[]|TimeInterface[] $times
      * @return bool
      */
-    public function lessThanOrEqualTo(object $time2): bool;
+    public static function lessThanOrEqualTo(object ...$times): bool;
 
     /**
-     * @param \DateTimeInterface|TimeInterface $time2
+     * @param \DateTimeInterface[]|TimeInterface[] $times
      * @return bool
      */
-    public function greaterThan(object $time2): bool;
+    public function greaterThan(object ...$times): bool;
 
     /**
-     * @param \DateTimeInterface|TimeInterface $time2
+     * @param \DateTimeInterface[]|TimeInterface[] $times
      * @return bool
      */
-    public function greaterThanOrEqualTo(object $time2): bool;
+    public function greaterThanOrEqualTo(object...$times): bool;
 }
