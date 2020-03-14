@@ -24,7 +24,7 @@ classes all references are to `static` rather than `self` to allow easily overri
 
 #### Contributing
 
-This library adheres to the PSR2 coding standard. Run the style check by running
+This library adheres to the PSR12 coding standard. Run the style check by running
 ```
 ./vendor/bin/phpcs --standard="phpcs.xml" src
 ```
