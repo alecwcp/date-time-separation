@@ -24,32 +24,7 @@ interface DateInterface
     public function format(string $format): string;
 
     /**
-     * @param \DateTimeInterface|DateInterface $date2
-     * @return bool
+     * @return \DateTimeInterface
      */
-    public function equalTo(object $date2): bool;
-
-    /**
-     * @param \DateTimeInterface|DateInterface $date2
-     * @return bool
-     */
-    public function lessThan(object $date2): bool;
-
-    /**
-     * @param \DateTimeInterface|DateInterface $date2
-     * @return bool
-     */
-    public function lessThanOrEqualTo(object $date2): bool;
-
-    /**
-     * @param \DateTimeInterface|DateInterface $date2
-     * @return bool
-     */
-    public function greaterThan(object $date2): bool;
-
-    /**
-     * @param \DateTimeInterface|DateInterface $date2
-     * @return bool
-     */
-    public function greaterThanOrEqualTo(object $date2): bool;
+    public function makeDateTimeInterface(): \DateTimeInterface;
 }

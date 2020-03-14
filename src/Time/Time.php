@@ -24,6 +24,14 @@ class Time implements TimeInterface
     /** @var int $microSecond */
     private $microSecond = 0;
 
+    public function __construct(int $hour, int $minute, int $second = 0, int $microSecond = 0)
+    {
+        $this->hour = $hour;
+        $this->minute = $minute;
+        $this->second = $second;
+        $this->microSecond = $microSecond;
+    }
+
     /**
      * @param string $format
      * @param string $date
@@ -40,16 +48,10 @@ class Time implements TimeInterface
         $dateTime = $dateTime->setDate(0, 0, 0);
         $matches = [];
         preg_match('/(\d{2}):(\d{2}):(\d{2}).(\d{6})/', $dateTime->format(self::FORMAT), $matches);
-        $time = new static();
-        $time->hour = (int) $matches[1];
-        $time->minute = (int) $matches[2];
-        $time->second = (int) $matches[3];
-        $time->microSecond = (int) $matches[4];
-        return $time;
+        return new static((int) $matches[1], (int) $matches[2], (int) $matches[3], (int) $matches[4]);
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
      * @param \DateTimeInterface|TimeInterface $time
      * @return Time
      * @throws InvalidArgumentException|Exception
@@ -61,7 +63,25 @@ class Time implements TimeInterface
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
+     * @inheritDoc
+     * @throws Exception
+     */
+    public function makeDateTimeInterface(): \DateTimeInterface
+    {
+        $utc = new \DateTimeZone('UTC');
+        $dateTime = \DateTimeImmutable::createFromFormat(
+            self::FORMAT,
+            $this->format(self::FORMAT),
+            $utc
+        );
+        if (false === $dateTime) {
+            throw new Exception(sprintf('Failed to create %s from %s', \DateTimeImmutable::class, self::class));
+        }
+        $dateTime = $dateTime->setDate(0, 0, 0);
+        return $dateTime;
+    }
+
+    /**
      * @inheritDoc
      * @throws InvalidArgumentException|Exception
      */
@@ -117,14 +137,14 @@ class Time implements TimeInterface
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
-     * @inheritDoc
-     * @throws InvalidArgumentException|Exception
+     * @param \DateTimeInterface|TimeInterface $time1
+     * @param \DateTimeInterface|TimeInterface ...$times
+     * @return bool
      */
-    public static function equalTo(object $time1, object ...$times): bool
+    public static function equal(object $time1, object ...$times): bool
     {
         array_unshift($times, $time1);
-        $times = self::transformInterfacesToTimes($times);
+        $times = self::transformInterfacesToTimes(...$times);
         $time1 = array_shift($times);
 
         foreach ($times as $key => $time) {
@@ -141,14 +161,14 @@ class Time implements TimeInterface
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
-     * @inheritDoc
-     * @throws InvalidArgumentException|Exception
+     * @param \DateTimeInterface|TimeInterface $time1
+     * @param \DateTimeInterface|TimeInterface ...$times
+     * @return bool
      */
     public static function lessThan(object $time1, object ...$times): bool
     {
         array_unshift($times, $time1);
-        $times = self::transformInterfacesToTimes($times);
+        $times = self::transformInterfacesToTimes(...$times);
         $time1 = array_shift($times);
 
         foreach ($times as $key => $time) {
@@ -158,7 +178,7 @@ class Time implements TimeInterface
                 return false;
             } elseif ($time1->second >= $time->second) {
                 return false;
-            } elseif ($time1->micoSecond >= $time->micoSecond) {
+            } elseif ($time1->microSecond >= $time->microSecond) {
                 return false;
             }
         }
@@ -166,38 +186,43 @@ class Time implements TimeInterface
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
-     * @inheritDoc
-     * @throws InvalidArgumentException|Exception
+     * @param \DateTimeInterface|TimeInterface $time1
+     * @param \DateTimeInterface|TimeInterface ...$times
+     * @return bool
      */
-    public static function lessThanOrEqualTo(object $time1, object ...$times): bool
+    public static function lessThanOrEqual(object $time1, object ...$times): bool
     {
         array_unshift($times, $time1);
-        return self::lessThan(...$times) || self::equalTo(...$times);
+        return self::lessThan(...$times) || self::equal(...$times);
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
-     * @inheritDoc
-     * @throws InvalidArgumentException|Exception
+     * @param \DateTimeInterface|TimeInterface $time1
+     * @param \DateTimeInterface|TimeInterface ...$times
+     * @return bool
      */
     public function greaterThan(object $time1, object ...$times): bool
     {
         array_unshift($times, $time1);
-        return !self::lessThanOrEqualTo(...$times);
+        return !self::lessThanOrEqual(...$times);
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
-     * @inheritDoc
-     * @throws InvalidArgumentException|Exception
+     * @param \DateTimeInterface|TimeInterface $time1
+     * @param \DateTimeInterface|TimeInterface ...$times
+     * @return bool
      */
-    public function greaterThanOrEqualTo(object $time1, object ...$times): bool
+    public function greaterThanOrEqual(object $time1, object ...$times): bool
     {
         array_unshift($times, $time1);
         return !self::lessThan(...$times);
     }
 
+    /**
+     * @psalm-suppress DocblockTypeContradiction
+     * @param string $method
+     * @param \DateTimeInterface|TimeInterface ...$times
+     */
     private static function checkInterfaceType(string $method, object ...$times): void
     {
         foreach ($times as $time) {
@@ -215,11 +240,14 @@ class Time implements TimeInterface
         }
     }
 
+    /**
+     * @param \DateTimeInterface|TimeInterface ...$times
+     * @return Time[]
+     */
     private static function transformInterfacesToTimes(...$times): array
     {
         return array_map(
             function (object $time): Time {
-                self::checkInterfaceType();
                 if (!$time instanceof Time) {
                     $time = static::createFromInterface($time);
                 }

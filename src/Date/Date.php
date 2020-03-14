@@ -24,6 +24,19 @@ class Date implements DateInterface
     private $day = 0;
 
     /**
+     * Date constructor.
+     * @param int $year
+     * @param int $month
+     * @param int $day
+     */
+    public function __construct(int $year, int $month, int $day)
+    {
+        $this->year = $year;
+        $this->month = $month;
+        $this->day = $day;
+    }
+
+    /**
      * @param string $format
      * @param string $date
      * @return Date
@@ -39,52 +52,46 @@ class Date implements DateInterface
         $dateTime = $dateTime->setTime(0, 0);
         $matches = [];
         preg_match('/(\d{4})-(\d{2})-(\d{2})/', $dateTime->format(self::FORMAT), $matches);
-        $date = new static();
-        $date->year = (int) $matches[1];
-        $date->month = (int) $matches[2];
-        $date->day = (int) $matches[3];
-        return $date;
+        return new static((int) $matches[1], (int) $matches[2], (int) $matches[3]);
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
      * @param \DateTimeInterface|DateInterface $date
      * @return Date
      * @throws InvalidArgumentException|Exception
      */
-    public function createFromInterface(object $date): Date
+    public static function createFromInterface(object $date): Date
     {
-        if (!$date instanceof DateInterface && !$date instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    DateInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
-
+        self::checkInterfaceType(__METHOD__, $date);
         return static::createFromFormat(self::FORMAT, $date->format(self::FORMAT));
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
+     * @inheritDoc
+     * @throws Exception
+     */
+    public function makeDateTimeInterface(): \DateTimeInterface
+    {
+        $utc = new \DateTimeZone('UTC');
+        $dateTime = \DateTimeImmutable::createFromFormat(
+            self::FORMAT,
+            $this->format(self::FORMAT),
+            $utc
+        );
+        if (false === $dateTime) {
+            throw new Exception(sprintf('Failed to create %s from %s', \DateTimeImmutable::class, self::class));
+        }
+        $dateTime = $dateTime->setTime(0, 0);
+        return $dateTime;
+    }
+
+    /**
      * @inheritDoc
      * @throws InvalidArgumentException|Exception
      */
     public function diff(object $date2, bool $absolute = false): \DateInterval
     {
-        if (!$date2 instanceof DateInterface && !$date2 instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    DateInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
+        self::checkInterfaceType(__METHOD__, $date2);
 
         $utc = new \DateTimeZone('UTC');
         $dateTime1 = \DateTimeImmutable::createFromFormat(
@@ -134,122 +141,121 @@ class Date implements DateInterface
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
-     * @inheritDoc
-     * @throws InvalidArgumentException|Exception
+     * @param \DateTimeInterface|DateInterface $date1
+     * @param \DateTimeInterface|DateInterface ...$dates
+     * @return bool
      */
-    public function equalTo(object $date2): bool
+    public static function equal(object $date1, object ...$dates): bool
     {
-        if (!$date2 instanceof DateInterface && !$date2 instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    DateInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
+        array_unshift($dates, $date1);
+        $dates = self::transformInterfacesToTimes(...$dates);
+        $date1 = array_shift($dates);
 
-        if (!$date2 instanceof Date) {
-            $date2 = static::createFromInterface($date2);
+        foreach ($dates as $key => $date) {
+            $equalTo = $date->year === $date1->year
+                && $date->month === $date1->month
+                && $date->day === $date1->day;
+            if (!$equalTo) {
+                return false;
+            }
+            $date1 = $date;
         }
-        return $date2->year === $this->year
-            && $date2->month === $this->month
-            && $date2->day === $this->day;
+        return true;
+    }
+
+    /**
+     * @param \DateTimeInterface|DateInterface $date1
+     * @param \DateTimeInterface|DateInterface ...$dates
+     * @return bool
+     */
+    public static function lessThan(object $date1, object ...$dates): bool
+    {
+        array_unshift($dates, $date1);
+        $dates = self::transformInterfacesToTimes(...$dates);
+        $date1 = array_shift($dates);
+
+        foreach ($dates as $key => $date) {
+            if ($date1->year >= $date->year) {
+                return false;
+            } elseif ($date1->month >= $date->month) {
+                return false;
+            } elseif ($date1->day >= $date->day) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @param \DateTimeInterface|DateInterface $date1
+     * @param \DateTimeInterface|DateInterface ...$dates
+     * @return bool
+     */
+    public static function lessThanOrEqual(object $date1, object ...$dates): bool
+    {
+        array_unshift($dates, $date1);
+        return self::lessThan(...$dates) || self::equal(...$dates);
+    }
+
+    /**
+     * @param \DateTimeInterface|DateInterface $date1
+     * @param \DateTimeInterface|DateInterface ...$dates
+     * @return bool
+     */
+    public function greaterThan(object $date1, object ...$dates): bool
+    {
+        array_unshift($dates, $date1);
+        return !self::lessThanOrEqual(...$dates);
+    }
+
+    /**
+     * @param \DateTimeInterface|DateInterface $date1
+     * @param \DateTimeInterface|DateInterface ...$dates
+     * @return bool
+     */
+    public function greaterThanOrEqual(object $date1, object ...$dates): bool
+    {
+        array_unshift($dates, $date1);
+        return !self::lessThan(...$dates);
     }
 
     /**
      * @psalm-suppress DocblockTypeContradiction
-     * @inheritDoc
-     * @throws InvalidArgumentException|Exception
+     * @param string $method
+     * @param \DateTimeInterface|DateInterface ...$dates
      */
-    public function lessThan(object $date2): bool
+    private static function checkInterfaceType(string $method, object ...$dates): void
     {
-        if (!$date2 instanceof DateInterface && !$date2 instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    DateInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
+        foreach ($dates as $date) {
+            if (!$date instanceof DateInterface && !$date instanceof \DateTimeInterface) {
+                throw new InvalidArgumentException(
+                    sprintf(
+                        'Expected %s or %s to be passed to %s. Got %s..',
+                        DateInterface::class,
+                        \DateTimeInterface::class,
+                        $method,
+                        'object' === gettype($date) ? get_class($date) : gettype($date)
+                    )
+                );
+            }
         }
-
-        if (!$date2 instanceof Date) {
-            $date2 = static::createFromInterface($date2);
-        }
-        if ($this->year < $date2->year) {
-            return true;
-        }
-        if ($this->month < $date2->month) {
-            return true;
-        }
-        return $this->day < $date2->day;
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
-     * @inheritDoc
-     * @throws InvalidArgumentException|Exception
+     * @param \DateTimeInterface|DateInterface ...$dates
+     * @return Date[]
      */
-    public function lessThanOrEqualTo(object $date2): bool
+    private static function transformInterfacesToTimes(...$dates): array
     {
-        if (!$date2 instanceof DateInterface && !$date2 instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    DateInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
-
-        return $this->lessThan($date2) || $this->equalTo($date2);
-    }
-
-    /**
-     * @psalm-suppress DocblockTypeContradiction
-     * @inheritDoc
-     * @throws InvalidArgumentException|Exception
-     */
-    public function greaterThan(object $date2): bool
-    {
-        if (!$date2 instanceof DateInterface && !$date2 instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    DateInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
-
-        return !$this->lessThanOrEqualTo($date2);
-    }
-
-    /**
-     * @psalm-suppress DocblockTypeContradiction
-     * @inheritDoc
-     * @throws InvalidArgumentException|Exception
-     */
-    public function greaterThanOrEqualTo(object $date2): bool
-    {
-        if (!$date2 instanceof DateInterface && !$date2 instanceof \DateTimeInterface) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'First argument passed to %s must be instance of %s or %s.',
-                    __METHOD__,
-                    DateInterface::class,
-                    \DateTimeInterface::class
-                )
-            );
-        }
-
-        return !$this->lessThan($date2);
+        return array_map(
+            function (object $date): Date {
+                if (!$date instanceof Date) {
+                    $date = static::createFromInterface($date);
+                }
+                return $date;
+            },
+            $dates
+        );
     }
 
     /**
